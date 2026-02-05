@@ -56,33 +56,19 @@
       margin-bottom: 10px;
     }
 
-    .btn-group {
-      display: flex;
-      gap: 10px;
-    }
-
     button {
-      flex: 1;
+      width: 100%;
       padding: 14px;
       font-size: 16px;
       border-radius: 10px;
       border: none;
+      background: #4CAF50;
+      color: white;
       cursor: pointer;
       transition: 0.2s;
     }
 
-    .search {
-      background: #4CAF50;
-      color: white;
-    }
-
-    .search:hover { background: #43a047; }
-
-    .clear {
-      background: #e0e0e0;
-    }
-
-    .clear:hover { background: #d5d5d5; }
+    button:hover { background: #43a047; }
 
     .result {
       margin-top: 20px;
@@ -91,17 +77,10 @@
 
     .result p {
       background: #f2f2f2;
-      padding: 10px 12px;
+      padding: 12px;
       border-radius: 8px;
-      margin: 6px 0;
+      margin: 8px 0;
       font-size: 15px;
-    }
-
-    .table-header {
-      background: #dce6f1 !important;
-      font-weight: bold;
-      font-size: 18px;
-      margin-top: 14px;
     }
 
     .highlight {
@@ -151,15 +130,11 @@
 
     <h2>Find Your Table</h2>
     <p class="description">
-      Enter part of your name to see your table and everyone seated with you.
+      Enter part of your name to see your table number.
     </p>
 
-    <input id="query" placeholder="e.g., Ram, Ravi, Smith" autocomplete="off" />
-
-    <div class="btn-group">
-      <button class="search" id="searchBtn">Search</button>
-      <button class="clear" id="clearBtn">Clear</button>
-    </div>
+    <input id="query" placeholder="e.g., Ram, Ravi" autocomplete="off" />
+    <button id="searchBtn">Search</button>
 
     <div id="results" class="result"></div>
 
@@ -175,24 +150,16 @@
   </div>
 
   <script>
-    /***********************
-     * CONFIG
-     ***********************/
-    const APP_VERSION = "v1.4.0"; // ⬅️ CHANGE THIS ON EVERY DEPLOY
+    /******** CONFIG ********/
+    const APP_VERSION = "v1.5.0";
     const API_URL =
-      "https://script.google.com/macros/s/AKfycbxCBTviBrAKljdzdL_rRQup-6m-ITWT2GiY6bSrg0e4FU3FX0Q3_SZTTfjodVUmIstj/exec";
+      "hhttps://script.google.com/macros/s/AKfycbxCBTviBrAKljdzdL_rRQup-6m-ITWT2GiY6bSrg0e4FU3FX0Q3_SZTTfjodVUmIstj/exec";
 
-    /***********************
-     * INIT
-     ***********************/
     document.getElementById("version").textContent = APP_VERSION;
-    console.log("Guest Table Finder version:", APP_VERSION);
 
     const loader = document.getElementById("loaderOverlay");
     const resultsDiv = document.getElementById("results");
     const queryInput = document.getElementById("query");
-
-    let cachedGuests = null;
 
     function showLoader() { loader.style.visibility = "visible"; }
     function hideLoader() { loader.style.visibility = "hidden"; }
@@ -202,14 +169,6 @@
         new RegExp(`(${query})`, "gi"),
         '<span class="highlight">$1</span>'
       );
-    }
-
-    async function loadGuests() {
-      if (cachedGuests) return cachedGuests;
-      const res = await fetch(`${API_URL}?v=${APP_VERSION}`);
-      if (!res.ok) throw new Error("API error");
-      cachedGuests = await res.json();
-      return cachedGuests;
     }
 
     async function search() {
@@ -224,38 +183,26 @@
       showLoader();
 
       try {
-        const allGuests = await loadGuests();
+        const res = await fetch(`${API_URL}?q=${encodeURIComponent(query)}&v=${APP_VERSION}`);
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
 
-        const matchedGuests = allGuests.filter(g =>
-          g.name.toLowerCase().includes(query)
-        );
+        hideLoader();
 
-        if (!matchedGuests.length) {
-          hideLoader();
+        if (!data.length) {
           resultsDiv.innerHTML = "<p>No matches found.</p>";
           return;
         }
 
-        const tables = [...new Set(matchedGuests.map(g => g.table))]
-          .sort((a, b) => a - b);
-
-        tables.forEach(tableNum => {
-          const header = document.createElement("p");
-          header.className = "table-header";
-          header.textContent = `Table ${tableNum}:`;
-          resultsDiv.appendChild(header);
-
-          allGuests
-            .filter(g => g.table === tableNum)
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .forEach(g => {
-              const p = document.createElement("p");
-              p.innerHTML = `- ${highlight(g.name, query)}`;
-              resultsDiv.appendChild(p);
-            });
+        data.forEach(g => {
+          const p = document.createElement("p");
+          p.innerHTML = `
+            <strong>${highlight(g.name, query)}</strong><br>
+            Table ${g.table}
+          `;
+          resultsDiv.appendChild(p);
         });
 
-        hideLoader();
       } catch (e) {
         hideLoader();
         resultsDiv.innerHTML = "<p>Error loading data.</p>";
@@ -263,14 +210,7 @@
       }
     }
 
-    function clearAll() {
-      queryInput.value = "";
-      resultsDiv.innerHTML = "";
-      queryInput.focus();
-    }
-
     document.getElementById("searchBtn").addEventListener("click", search);
-    document.getElementById("clearBtn").addEventListener("click", clearAll);
     queryInput.addEventListener("keypress", e => {
       if (e.key === "Enter") search();
     });
