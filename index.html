@@ -1,171 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guest Table Finder</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
       font-family: 'Roboto', sans-serif;
       background: #f7f7f7;
+      margin: 0;
+      padding: 20px;
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
     }
 
     .container {
-      background: white;
+      background: #fff;
+      width: 100%;
+      max-width: 420px;
       padding: 20px;
-      border-radius: 15px;
+      border-radius: 16px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
       text-align: center;
       position: relative;
     }
 
-    h2 { color: #333; margin-bottom: 15px; }
-    .logo { max-width: 150px; margin-bottom: 15px; border-radius: 10px; }
-    input, button {
-      width: 100%;
-      font-size: 16px;
-      padding: 12px;
+    .logo {
+      max-width: 140px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    h2 {
       margin: 10px 0;
-      border-radius: 8px;
+      color: #333;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
     }
 
     button {
-      background: #4CAF50;
-      color: white;
+      flex: 1;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 10px;
       border: none;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.2s;
     }
 
-    button:hover { background: #45a049; }
+    .search {
+      background: #4CAF50;
+      color: white;
+    }
 
-    .result p {
-      background: #f0f0f0;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 8px 0;
+    .search:hover { background: #43a047; }
+
+    .clear {
+      background: #e0e0e0;
+    }
+
+    .clear:hover { background: #d5d5d5; }
+
+    .result {
+      margin-top: 20px;
       text-align: left;
     }
 
-    .result p.table-header {
+    .result p {
+      background: #f2f2f2;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin: 6px 0;
+      font-size: 15px;
+    }
+
+    .table-header {
+      background: #dce6f1 !important;
       font-weight: bold;
-      background: #dce6f1;
       font-size: 18px;
+      margin-top: 14px;
     }
 
     .highlight {
-      color: green;
+      color: #2e7d32;
       font-weight: bold;
     }
 
-    .footer { margin-top: 20px; font-size: 12px; color: #888; }
+    .footer {
+      margin-top: 18px;
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+    }
 
+    /* Loader */
     #loaderOverlay {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255, 255, 255, 0.8);
-      display: flex; justify-content: center; align-items: center;
-      border-radius: 15px; visibility: hidden; z-index: 1000;
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 16px;
+      visibility: hidden;
+      z-index: 100;
     }
 
     #loaderOverlay svg {
-      width: 50px;
-      height: 50px;
-      animation: spin 1.2s linear infinite;
+      width: 56px;
+      height: 56px;
+      animation: spin 1.1s linear infinite;
       fill: #4CAF50;
     }
 
-    @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <img src="https://www.theknot.com/tk-media/images/495995ec-7459-410d-a1e7-98a2bea3919d~rt_auto-cr_27.0.837.1080-rs_2880.h?ordering=explicit&quality=75" alt="Event Logo" class="logo">
-    <h2>Find Your Table</h2>
-    <p>Enter part of your name to see your table number and all guests at the same table.</p>
+    <img class="logo"
+      src="https://www.theknot.com/tk-media/images/495995ec-7459-410d-a1e7-98a2bea3919d~rt_auto-cr_27.0.837.1080-rs_2880.h?quality=75"
+      alt="Event Logo">
 
-    <input id="query" placeholder="e.g., Smith or Theo" autocomplete="off">
-    <button id="searchBtn">Search</button>
+    <h2>Find Your Table</h2>
+    <p class="description">
+      Enter part of your name to see your table and everyone seated with you.
+    </p>
+
+    <input id="query" placeholder="e.g., Ram, Ravi, Smith" autocomplete="off" />
+
+    <div class="btn-group">
+      <button class="search" id="searchBtn">Search</button>
+      <button class="clear" id="clearBtn">Clear</button>
+    </div>
 
     <div id="results" class="result"></div>
-    <div class="footer">Event Table Finder</div>
 
-    <div id="loaderOverlay" aria-live="polite" aria-busy="true" role="alert" aria-label="Loading">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 2v6h1v8H6v6h12v-6h-1V8h1V2H6zm10 2v4H8V4h8zM8 18h8v4H8v-4z"/>
+    <div class="footer">
+      Event Table Finder • <span id="version"></span>
+    </div>
+
+    <div id="loaderOverlay">
+      <svg viewBox="0 0 24 24">
+        <path d="M6 2v6h1v8H6v6h12v-6h-1V8h1V2H6z"/>
       </svg>
     </div>
   </div>
 
   <script>
-    // <<< CHANGE THIS TO YOUR CORS-ENABLED APPS SCRIPT WEB APP URL >>>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzdp9gnqsxdsUv2uByg1oKwhTtZIjbJ4njPXkv70LpZ6UtecTZj2vvrcIynkn1XpjOE/exec";
+    /***********************
+     * CONFIG
+     ***********************/
+    const APP_VERSION = "v1.4.0"; // ⬅️ CHANGE THIS ON EVERY DEPLOY
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbzdp9gnqsxdsUv2uByg1oKwhTtZIjbJ4njPXkv70LpZ6UtecTZj2vvrcIynkn1XpjOE/exec";
 
-    const loader = document.getElementById('loaderOverlay');
-    const resultsDiv = document.getElementById('results');
-    const queryInput = document.getElementById('query');
-    const searchBtn = document.getElementById('searchBtn');
+    /***********************
+     * INIT
+     ***********************/
+    document.getElementById("version").textContent = APP_VERSION;
+    console.log("Guest Table Finder version:", APP_VERSION);
 
-    function showLoader() { loader.style.visibility = 'visible'; }
-    function hideLoader() { loader.style.visibility = 'hidden'; }
+    const loader = document.getElementById("loaderOverlay");
+    const resultsDiv = document.getElementById("results");
+    const queryInput = document.getElementById("query");
+
+    let cachedGuests = null;
+
+    function showLoader() { loader.style.visibility = "visible"; }
+    function hideLoader() { loader.style.visibility = "hidden"; }
 
     function highlight(text, query) {
-      const regex = new RegExp(`(${query})`, "gi");
-      return text.replace(regex, '<span class="highlight">$1</span>');
+      return text.replace(
+        new RegExp(`(${query})`, "gi"),
+        '<span class="highlight">$1</span>'
+      );
+    }
+
+    async function loadGuests() {
+      if (cachedGuests) return cachedGuests;
+      const res = await fetch(`${API_URL}?v=${APP_VERSION}`);
+      if (!res.ok) throw new Error("API error");
+      cachedGuests = await res.json();
+      return cachedGuests;
     }
 
     async function search() {
-      const query = queryInput.value.toLowerCase().trim();
-      resultsDiv.innerHTML = '';
-      if (!query) { resultsDiv.innerHTML = '<p>Please enter a name.</p>'; return; }
+      const query = queryInput.value.trim().toLowerCase();
+      resultsDiv.innerHTML = "";
+
+      if (!query) {
+        resultsDiv.innerHTML = "<p>Please enter a name.</p>";
+        return;
+      }
 
       showLoader();
 
       try {
-        const response = await fetch(`${API_URL}?q=${encodeURIComponent(query)}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json(); // JSON from CORS-enabled Apps Script
-        hideLoader();
+        const allGuests = await loadGuests();
 
-        if (!data || data.length === 0) { resultsDiv.innerHTML = '<p>No matches found.</p>'; return; }
+        const matchedGuests = allGuests.filter(g =>
+          g.name.toLowerCase().includes(query)
+        );
 
-        // Find unique tables
-        const tables = [...new Set(data.map(item => item.table.toString()))];
+        if (!matchedGuests.length) {
+          hideLoader();
+          resultsDiv.innerHTML = "<p>No matches found.</p>";
+          return;
+        }
+
+        const tables = [...new Set(matchedGuests.map(g => g.table))]
+          .sort((a, b) => a - b);
 
         tables.forEach(tableNum => {
-          const tableHeader = document.createElement('p');
-          tableHeader.classList.add('table-header');
-          tableHeader.textContent = `Table ${tableNum}:`;
-          resultsDiv.appendChild(tableHeader);
+          const header = document.createElement("p");
+          header.className = "table-header";
+          header.textContent = `Table ${tableNum}:`;
+          resultsDiv.appendChild(header);
 
-          const tableGuests = data.filter(item => item.table.toString() === tableNum);
-          tableGuests.forEach(guest => {
-            const p = document.createElement('p');
-            p.innerHTML = `- ${highlight(guest.name, query)}`;
-            resultsDiv.appendChild(p);
-          });
+          allGuests
+            .filter(g => g.table === tableNum)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach(g => {
+              const p = document.createElement("p");
+              p.innerHTML = `- ${highlight(g.name, query)}`;
+              resultsDiv.appendChild(p);
+            });
         });
 
-      } catch (error) {
         hideLoader();
-        console.error(error);
-        resultsDiv.innerHTML = '<p>Error loading data. Please check your Web App deployment and URL.</p>';
+      } catch (e) {
+        hideLoader();
+        resultsDiv.innerHTML = "<p>Error loading data.</p>";
+        console.error(e);
       }
     }
 
-    searchBtn.addEventListener('click', search);
-    queryInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') search(); });
+    function clearAll() {
+      queryInput.value = "";
+      resultsDiv.innerHTML = "";
+      queryInput.focus();
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", search);
+    document.getElementById("clearBtn").addEventListener("click", clearAll);
+    queryInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") search();
+    });
   </script>
 </body>
 </html>
